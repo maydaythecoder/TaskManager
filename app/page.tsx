@@ -1,10 +1,11 @@
-import TaskList from './components/TaskList'
+// import SignIn from './components/signin'
+import SignIn from './components/signin'
+import SignUp from './components/signup'
 
 export default function Home() {
   return (
-<div className=' w-fit overflow-hidden'>
-  <h1 className='mx-10 mt-4 mb-4 text-3xl font-bold font-sans'>Task manager</h1>
-  <TaskList />
+<div className=' w-full h-full bg-gray-200'>
+  <SignUp />
 </div>
   )
 }
