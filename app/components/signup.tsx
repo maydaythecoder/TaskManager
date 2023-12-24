@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { authInstance } from './firebase';
+import Link from 'next/link';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -92,10 +93,12 @@ const SignUp = () => {
               </div>
 
               <div className="text-sm leading-6">
-                <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
-                  Sign In to your account
-                </a>
-              </div>
+  <Link href="/SignIn">
+    <p className="font-semibold text-indigo-600 hover:text-indigo-500">
+      Sign In to your account
+    </p>
+  </Link>
+</div>
             </div>
 
             <div>
