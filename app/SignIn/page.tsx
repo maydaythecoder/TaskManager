@@ -1,17 +1,18 @@
-"use client";
+"use client"
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {  GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
 import { authInstance } from "../components/firebase";
 import { useRouter } from "next/navigation";
 
 export default function SignIn() {
-  const router = useRouter();
 
+
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // const [remember, setRemember] = useState(false);
+
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,6 +40,7 @@ export default function SignIn() {
     }
   };
 
+
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(authInstance, provider)
@@ -52,7 +54,38 @@ export default function SignIn() {
       });
   };
 
-  console.log(authInstance)
+    /*
+  
+  const signInWithGoogle = () => {
+    return new Promise((resolve, reject) => {
+      const provider = new GoogleAuthProvider();
+      signInWithPopup(authInstance, provider)
+        .then((result) => {
+          // Successful login
+          router.push("/TaskList"); // Navigate to TaskList upon successful Google login
+          resolve(result); // Resolve the promise with the authentication result
+        })
+        .catch((error) => {
+          // Handle Errors here.
+          console.error(error);
+  
+          // Check if the error is due to a cancelled popup request
+          if (error.code === 'auth/cancelled-popup-request') {
+            // Handle cancellation gracefully (e.g., show a message to the user)
+            console.log('Google sign-in popup cancelled by the user.');
+          } else {
+            // Reject the promise with other errors
+            reject(error);
+          }
+        });
+    });
+  };
+
+  */
+
+
+  console.log(authInstance.currentUser)
+
 
   return (
     <>

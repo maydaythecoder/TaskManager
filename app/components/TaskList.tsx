@@ -1,6 +1,6 @@
 "use client";
 
-import { db } from "./firebase";
+import { authInstance, db } from "./firebase";
 import { Listbox, Transition } from "@headlessui/react";
 import React, { Fragment, useState, useEffect } from "react";
 import {
@@ -150,6 +150,9 @@ export default function TaskSection() {
         return "";
     }
   };
+
+  console.log(authInstance.currentUser?.displayName, authInstance.currentUser?.uid, authInstance.currentUser?.email)
+
   
 
   return (
