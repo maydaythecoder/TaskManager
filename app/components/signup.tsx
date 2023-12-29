@@ -1,39 +1,99 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { authInstance } from './firebase';
+import { authInstance, db } from './firebase';
 import Link from 'next/link';
+import { UserData } from '@/lib/types/user.types';
+import { collection, doc, setDoc } from 'firebase/firestore';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
   const auth = authInstance ? authInstance : getAuth();
 
-  const handleSignUp = (e: { preventDefault: () => void; }) => {
-    e.preventDefault();
-
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed up
-        const user = userCredential.user;
-        // Handle further actions if needed
-        console.log('User signed up:', user);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        setError(errorMessage);
-        console.error('Sign-up error:', errorCode, errorMessage);
-      });
-      setEmail('');
-      setPassword('');
+  const addUser = async (uid: string, data: Partial<UserData>) => {
+    try {
+      const userRef = doc(collection(db, "users"), uid);
+      await setDoc(userRef, data, { merge: true });
+      console.log("User document successfully created/updated");
+    } catch (error: any) {
+      console.error("Error adding user document:", error.message);
+      // You can handle the error further, such as showing a user-friendly message to the user
+      throw new Error("Failed to add user document to Firestore");
+    }
   };
+  
 
 
-  console.log(authInstance.currentUser?.displayName, authInstance.currentUser?.uid, authInstance.currentUser?.email)
+
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password, name);
+      var user = userCredential.user;
+      const uid = user.uid;
+  
+      // Define user data to be stored in Firestore
+      const userData: Partial<UserData> = {
+        email:user.email || '', // Handl
+
+        // Add more properties as needed
+      };
+      
+          // Creating a dictionary with user properties
+          var userDetails = {
+            uid: user.uid,
+            displayName: user.displayName || '', // Handle null by providing a default value
+            title:'' ,
+            photoURL: user.photoURL || '', // Handle null by providing a default value
+            email: user.email || '', // Handle null by providing a default value
+            emailVerified: user.emailVerified,
+            phoneNumber: user.phoneNumber || '', // Handle null by providing a default value
+            isAnonymous: user.isAnonymous,
+            tenantId: user.tenantId || '', // Handle null by providing a default value
+            providerId: user.providerId,
+            metadata: {
+              creationTime: user.metadata.creationTime,
+              lastSignInTime: user.metadata.lastSignInTime,
+            },
+            providerData: user.providerData.map((provider) => ({
+              providerId: provider.providerId,
+              uid: provider.uid,
+              displayName: provider.displayName || '', // Handle null by providing a default value
+              email: provider.email || '', // Handle null by providing a default value
+              phoneNumber: provider.phoneNumber || '', // Handle null by providing a default value
+              photoURL: provider.photoURL || '', // Handle null by providing a default value
+            })),
+          };
+          
+
+          
+          // Add user data to Firestore
+          await addUser(uid, userDetails);
+          
+
+  
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      setError(errorMessage);
+      console.error('Sign-up error:', errorCode, errorMessage);
+    }
+  
+    setEmail('');
+    setPassword('');
+    setName('');
+  };
+  
+
+
+
+  //  addUser();
 
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -46,6 +106,24 @@ const SignUp = () => {
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
         <div className="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
           <form className="space-y-6" action="#" method="POST" onSubmit={handleSignUp}>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">
+                FIrst name
+              </label>
+              <div className="mt-2">
+                <input
+                  id="Name"
+                  name="Name"
+                  type="Name"
+                  autoComplete="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                 Email address
@@ -107,7 +185,7 @@ const SignUp = () => {
             <div>
               <button
                 type="submit"
-                // add onsubmit
+                // onClick={handleSignUp}
                 className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 Sign Up

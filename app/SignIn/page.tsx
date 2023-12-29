@@ -2,33 +2,92 @@
 
 import { useState } from "react";
 import {  GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
-import { authInstance } from "../components/firebase";
+import { authInstance, db, } from "../components/firebase";
 import { useRouter } from "next/navigation";
+import { UserData } from "@/lib/types/user.types";
+import { doc, collection, setDoc, getDoc } from "firebase/firestore";
 
 export default function SignIn() {
-
-
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [remember, setRemember] = useState(false);
 
+  const addUser = async (uid: string, data: Partial<UserData>) => {
+    try {
+      const userRef = doc(collection(db, "users"), uid);
+
+      // Check if user with the same email already exists
+      const existingUser = await getDoc(userRef);
+      if (existingUser.exists()) {
+        console.log("User with the same email already exists");
+        router.push("/TaskList");
+        return;
+      }
+
+      // If user doesn't exist, add user data to Firestore
+      await setDoc(userRef, data, { merge: true });
+      console.log("User document successfully created/updated");
+
+      // Navigate to TaskList upon successful user creation
+      router.push("/TaskList");
+    } catch (error: any) {
+      console.error("Error adding user document:", error.message);
+      // You can handle the error further, such as showing a user-friendly message to the user
+      throw new Error("Failed to add user document to Firestore");
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(authInstance, provider);
+
+      // Successful login
+      const user = result.user;
+      const uid = user.uid;
+
+      // Creating a dictionary with user properties
+      const userDetails = {
+        uid: user.uid,
+        displayName: user.displayName || '',
+        title: '',
+        photoURL: user.photoURL || '',
+        email: user.email || '',
+        emailVerified: user.emailVerified,
+        phoneNumber: user.phoneNumber || '',
+        isAnonymous: user.isAnonymous,
+        tenantId: user.tenantId || '',
+        providerId: user.providerId,
+        metadata: {
+          creationTime: user.metadata.creationTime,
+          lastSignInTime: user.metadata.lastSignInTime,
+        },
+        providerData: user.providerData.map((provider: { providerId: any; uid: any; displayName: any; email: any; phoneNumber: any; photoURL: any; }) => ({
+          providerId: provider.providerId,
+          uid: provider.uid,
+          displayName: provider.displayName || '',
+          email: provider.email || '',
+          phoneNumber: provider.phoneNumber || '',
+          photoURL: provider.photoURL || '',
+        })),
+      };
+
+      // Add user data to Firestore
+      await addUser(uid, userDetails);
+
+      // Navigate to TaskList upon successful Google login
+      router.push("/TaskList");
+    } catch (error) {
+      // Handle Errors here.
+      console.error(error);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Assuming email and password are defined elsewhere in your component
-    const credentials = {
-      email,
-      password,
-    };
-
     try {
-      const result = await signInWithEmailAndPassword(
-        authInstance,
-        email,
-        password
-      );
+      const result = await signInWithEmailAndPassword(authInstance, email, password);
 
       // Assuming a successful login, you can navigate to the TaskList component
       if (result) {
@@ -41,50 +100,6 @@ export default function SignIn() {
   };
 
 
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(authInstance, provider)
-      .then((result) => {
-        // Successful login
-        router.push("/TaskList"); // Navigate to TaskList upon successful Google login
-      })
-      .catch((error) => {
-        // Handle Errors here.
-        console.error(error);
-      });
-  };
-
-    /*
-  
-  const signInWithGoogle = () => {
-    return new Promise((resolve, reject) => {
-      const provider = new GoogleAuthProvider();
-      signInWithPopup(authInstance, provider)
-        .then((result) => {
-          // Successful login
-          router.push("/TaskList"); // Navigate to TaskList upon successful Google login
-          resolve(result); // Resolve the promise with the authentication result
-        })
-        .catch((error) => {
-          // Handle Errors here.
-          console.error(error);
-  
-          // Check if the error is due to a cancelled popup request
-          if (error.code === 'auth/cancelled-popup-request') {
-            // Handle cancellation gracefully (e.g., show a message to the user)
-            console.log('Google sign-in popup cancelled by the user.');
-          } else {
-            // Reject the promise with other errors
-            reject(error);
-          }
-        });
-    });
-  };
-
-  */
-
-
-  console.log(authInstance.currentUser)
 
 
   return (

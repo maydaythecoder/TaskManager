@@ -151,7 +151,7 @@ export default function TaskSection() {
     }
   };
 
-  console.log(authInstance.currentUser?.displayName, authInstance.currentUser?.uid, authInstance.currentUser?.email)
+
 
   
 
