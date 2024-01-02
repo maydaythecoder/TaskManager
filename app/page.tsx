@@ -1,9 +1,10 @@
-import SignUp from './components/signup'
+import SignIn from './SignIn/page'
+
 
 export default function Home() {
   return (
-<div className=' w-full h-full bg-gray-200'>
-  <SignUp />
+<div className=''>
+  <SignIn />
 </div>
   )
 }

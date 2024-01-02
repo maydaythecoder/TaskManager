@@ -1,17 +1,24 @@
 "use client"
 
-import { useState } from "react";
-import {  GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
-import { authInstance, db, } from "../components/firebase";
+import { FormEvent, useState } from "react";
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { authInstance, db } from "../components/firebase";
 import { useRouter } from "next/navigation";
 import { UserData } from "@/lib/types/user.types";
 import { doc, collection, setDoc, getDoc } from "firebase/firestore";
 
+// Define the component
 export default function SignIn() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
 
+  // Use authInstance if available, otherwise create a new auth instance
+  const auth = authInstance ? authInstance : getAuth();
+
+  // Function to add user data to Firestore
   const addUser = async (uid: string, data: Partial<UserData>) => {
     try {
       const userRef = doc(collection(db, "users"), uid);
@@ -32,15 +39,15 @@ export default function SignIn() {
       router.push("/TaskList");
     } catch (error: any) {
       console.error("Error adding user document:", error.message);
-      // You can handle the error further, such as showing a user-friendly message to the user
       throw new Error("Failed to add user document to Firestore");
     }
   };
 
+  // Function to sign in with Google
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(authInstance, provider);
+      const result = await signInWithPopup(auth, provider);
 
       // Successful login
       const user = result.user;
@@ -62,7 +69,7 @@ export default function SignIn() {
           creationTime: user.metadata.creationTime,
           lastSignInTime: user.metadata.lastSignInTime,
         },
-        providerData: user.providerData.map((provider: { providerId: any; uid: any; displayName: any; email: any; phoneNumber: any; photoURL: any; }) => ({
+        providerData: user.providerData.map((provider) => ({
           providerId: provider.providerId,
           uid: provider.uid,
           displayName: provider.displayName || '',
@@ -78,20 +85,20 @@ export default function SignIn() {
       // Navigate to TaskList upon successful Google login
       router.push("/TaskList");
     } catch (error) {
-      // Handle Errors here.
       console.error(error);
     }
   };
 
+  // Function to handle regular sign-in
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      const result = await signInWithEmailAndPassword(authInstance, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
 
       // Assuming a successful login, you can navigate to the TaskList component
       if (result) {
-        router.push("/TaskList"); // Update the route to match your TaskList component
+        router.push("/TaskList");
       }
     } catch (error) {
       console.error(error);
@@ -99,14 +106,68 @@ export default function SignIn() {
     }
   };
 
+  // Function to handle sign-up
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      var user = userCredential.user;
+      const uid = user.uid;
 
+      // Define user data to be stored in Firestore
+      const userData: Partial<UserData> = {
+        email: user.email || '',
+        // Add more properties as needed
+      };
 
+      // Creating a dictionary with user properties
+      var userDetails = {
+        uid: user.uid,
+        displayName: user.displayName || '',
+        title: '',
+        photoURL: user.photoURL || '',
+        email: user.email || '',
+        emailVerified: user.emailVerified,
+        phoneNumber: user.phoneNumber || '',
+        isAnonymous: user.isAnonymous,
+        tenantId: user.tenantId || '',
+        providerId: user.providerId,
+        metadata: {
+          creationTime: user.metadata.creationTime,
+          lastSignInTime: user.metadata.lastSignInTime,
+        },
+        providerData: user.providerData.map((provider) => ({
+          providerId: provider.providerId,
+          uid: provider.uid,
+          displayName: provider.displayName || '',
+          email: provider.email || '',
+          phoneNumber: provider.phoneNumber || '',
+          photoURL: provider.photoURL || '',
+        })),
+      };
+
+      // Add user data to Firestore
+      await addUser(uid, userDetails);
+
+      // Navigate to TaskList upon successful signup
+      router.push("/UserInfo");
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      setError(errorMessage);
+      console.error('Sign-up error:', errorCode, errorMessage);
+    }
+
+    setEmail('');
+    setPassword('');
+  };
+
+  // Render the component
   return (
     <>
-
-      <div>
-      <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="">
+        <div className="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
           <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <h2 className="text-center text-2xl font-bold leading-9 tracking-tight text-white">
               Sign in to your account
@@ -119,13 +180,11 @@ export default function SignIn() {
                 className="space-y-6"
                 action="#"
                 method="POST"
-                onSubmit={handleSignIn}
+                onSubmit={(e) => { handleSignIn(e); handleSignUp(e); }}  
+                // {/* Corrected onSubmit handler */}
               >
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
+                  <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                     Email address
                   </label>
                   <div className="mt-2">
@@ -134,19 +193,16 @@ export default function SignIn() {
                       name="email"
                       type="email"
                       autoComplete="email"
-                      required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      required
                       className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
+                  <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                     Password
                   </label>
                   <div className="mt-2">
@@ -155,9 +211,9 @@ export default function SignIn() {
                       name="password"
                       type="password"
                       autoComplete="current-password"
-                      required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      required
                       className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                   </div>
@@ -192,7 +248,6 @@ export default function SignIn() {
                 <div>
                   <button
                     type="submit"
-                    // onClick={() => signIn("google")}
                     className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     Sign in
