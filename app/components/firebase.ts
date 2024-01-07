@@ -25,6 +25,7 @@ export const authInstance = getAuth();
 export const storageInstance = getStorage(app);
 export const functionsInstance = getFunctions(app);
 
+
 let analyticsInstance;
 
 // Self-invoking async function

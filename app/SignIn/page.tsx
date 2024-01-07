@@ -11,7 +11,6 @@ import { doc, collection, setDoc, getDoc } from "firebase/firestore";
 export default function SignIn() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
@@ -57,14 +56,11 @@ export default function SignIn() {
       const userDetails = {
         uid: user.uid,
         displayName: user.displayName || '',
-        title: '',
         photoURL: user.photoURL || '',
         email: user.email || '',
         emailVerified: user.emailVerified,
         phoneNumber: user.phoneNumber || '',
         isAnonymous: user.isAnonymous,
-        tenantId: user.tenantId || '',
-        providerId: user.providerId,
         metadata: {
           creationTime: user.metadata.creationTime,
           lastSignInTime: user.metadata.lastSignInTime,
@@ -122,17 +118,14 @@ export default function SignIn() {
       };
 
       // Creating a dictionary with user properties
-      var userDetails = {
+      const userDetails = {
         uid: user.uid,
         displayName: user.displayName || '',
-        title: '',
         photoURL: user.photoURL || '',
         email: user.email || '',
         emailVerified: user.emailVerified,
         phoneNumber: user.phoneNumber || '',
         isAnonymous: user.isAnonymous,
-        tenantId: user.tenantId || '',
-        providerId: user.providerId,
         metadata: {
           creationTime: user.metadata.creationTime,
           lastSignInTime: user.metadata.lastSignInTime,
@@ -146,6 +139,7 @@ export default function SignIn() {
           photoURL: provider.photoURL || '',
         })),
       };
+
 
       // Add user data to Firestore
       await addUser(uid, userDetails);
