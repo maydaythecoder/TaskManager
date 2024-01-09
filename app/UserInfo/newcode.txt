@@ -1,0 +1,37 @@
+
+
+const handleFileChange = async (event) => {
+  const files = event.target.files;
+
+  if (files.length > 0) {
+    const uploadedFile = files[0];
+
+    // Create a storageInstance reference
+    const storageInstanceRef = storageInstance.ref(`cover-photos/${authInstance.uid}/${uploadedFile.name}`);
+
+    try {
+      // Upload file to Firebase storageInstance
+      const snapshot = await storageInstanceRef.put(uploadedFile);
+
+      // Get the download URL
+      const downloadURL = await snapshot.ref.getDownloadURL();
+
+      console.log('File uploaded:', uploadedFile);
+      console.log('File name:', uploadedFile.name);
+      console.log('File size:', uploadedFile.size, 'bytes');
+      console.log('File type:', uploadedFile.type);
+      console.log('Download URL:', downloadURL);
+
+      // Now you can store the download URL in db or perform any other actions
+
+      // For example, you can add the download URL to a db document
+      await db.collection('users').add({
+        photoURL: downloadURL,
+        // Add other fields as needed
+      });
+
+    } catch (error) {
+      console.error('Error uploading file:', error.message);
+    }
+  }
+};
