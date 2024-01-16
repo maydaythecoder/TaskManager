@@ -1,5 +1,3 @@
-
-
 const handleFileChange = async (event) => {
   const files = event.target.files;
 
@@ -34,4 +32,55 @@ const handleFileChange = async (event) => {
       console.error('Error uploading file:', error.message);
     }
   }
+};
+
+
+
+
+
+
+
+
+
+Uploading and Saving the Image Reference:
+// Assuming you have a file input for the profile picture
+const uploadedFile = event.target.files[0];
+const storageRef = firebase.storage().ref();
+const userProfilePicRef = storageRef.child('path/to/save/' + file.name);
+
+// Upload the file
+const uploadTask = userProfilePicRef.put(uploadedFile);
+
+uploadTask.then(() => {
+  // Get the download URL
+  userProfilePicRef.getDownloadURL().then((downloadURL) => {
+    // Save the URL to the user's profile in the database
+    const userRef = firebase.database().ref('users/' + userId);
+    userRef.update({ profilePicture: downloadURL });
+  });
+});
+
+
+
+Fetching and Displaying the Image:
+import { useEffect, useState } from 'react';
+
+const UserProfile = ({ userId }) => {
+  const [profilePicUrl, setProfilePicUrl] = useState('');
+
+  useEffect(() => {
+    // Fetch user data
+    const userRef = firebase.database().ref('users/' + userId);
+    userRef.on('value', (snapshot) => {
+      const userData = snapshot.val();
+      setProfilePicUrl(userData.profilePicture);
+    });
+  }, [userId]);
+
+  return (
+    <div>
+      {profilePicUrl && <img src={profilePicUrl} alt="User profile" />}
+      {/* Rest of the profile component */}
+    </div>
+  );
 };

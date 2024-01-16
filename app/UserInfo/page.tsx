@@ -7,8 +7,10 @@ import { doc, collection, getDoc, setDoc, addDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/20/solid";
 import { fileURLToPath } from "url";
-import { ref, uploadBytes } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import firebase from "firebase/compat/app";
+import { getDatabase, ref as databaseRef, update } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
 
 
 function classNames(...classes: string[]): string {
@@ -19,43 +21,44 @@ export default function Example() {
   const [agreed, setAgreed] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
   const [number, setNumber] = useState<string>("");
-  const router = useRouter(); // Add useRouter hook for navigation
+  const [photoURL, setPhotoURL] = useState<string | null>(null); // Added state for photoURL
+  const router = useRouter();
 
 
-  // trying to add firebase storage
   const handleFileChange = async (event: { target: { files: any; }; }) => {
     const files = event.target.files;
   
     if (files.length > 0) {
-      const user = authInstance.currentUser;
+      const user = getAuth().currentUser;
   
       if (user) {
         const uploadedFile = files[0];
         const storageRef = ref(storageInstance, `cover-photos/${user.uid}/${uploadedFile.name}`);
-
+  
         try {
-          // Upload file to Firebase Storage
-          const snapshot = await uploadBytes(storageRef, uploadedFile);
-        
-          // Explicitly cast the StorageReference to its correct type
-          const storageRefWithDownloadURL = snapshot.ref as firebase.storage.Reference & { getDownloadURL(): Promise<string> };
-        
-          // Get the download URL
-          const downloadURL = await storageRefWithDownloadURL.getDownloadURL();
-        
-          console.log('File uploaded:', uploadedFile);
-          console.log('File name:', uploadedFile.name);
-          console.log('File size:', uploadedFile.size, 'bytes');
-          console.log('File type:', uploadedFile.type);
-          console.log('Download URL:', downloadURL);
+          const uploadTask = uploadBytes(storageRef, uploadedFile);
   
-          // Add the download URL to the 'users' collection in Firestore
-          const userDocRef = await addDoc(collection(db, 'users'), {
-            photoURL: downloadURL,
-            // Add other fields as needed
+          uploadTask.then(async () => {
+            // Get the download URL
+            const downloadURL = await getDownloadURL(storageRef);
+  
+            // Save the URL to the user's profile in the database
+            const userRef = databaseRef(getDatabase(), 'users/' + user.uid);
+            update(userRef, { profilePicture: downloadURL });
+  
+            console.log('File uploaded:', uploadedFile);
+            console.log('File name:', uploadedFile.name);
+            console.log('File size:', uploadedFile.size, 'bytes');
+            console.log('File type:', uploadedFile.type);
+            console.log('Download URL:', downloadURL);
+  
+            // Add the download URL to the 'users' collection in Firestore
+            const userDocRef = await addDoc(collection(db, `users/${user.uid}`), {
+              photoURL: downloadURL,
+            });
+  
+            console.log('Document added with ID: ', userDocRef.id);
           });
-  
-          console.log('Document added with ID: ', userDocRef.id);
   
         } catch (error) {
           console.error('Error uploading file:', error);
