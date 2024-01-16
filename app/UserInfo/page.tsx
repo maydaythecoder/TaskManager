@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Switch } from "@headlessui/react";
 import { authInstance, storageInstance } from "../components/firebase";
 import { db } from "../components/firebase";
-import { doc, collection, getDoc, setDoc, addDoc } from "firebase/firestore";
+import { doc, collection, getDoc, setDoc, addDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/20/solid";
 import { fileURLToPath } from "url";
@@ -43,8 +43,8 @@ export default function Example() {
             const downloadURL = await getDownloadURL(storageRef);
   
             // Save the URL to the user's profile in the database
-            const userRef = databaseRef(getDatabase(), 'users/' + user.uid);
-            update(userRef, { profilePicture: downloadURL });
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, { profileURL: downloadURL });
   
             console.log('File uploaded:', uploadedFile);
             console.log('File name:', uploadedFile.name);
@@ -54,7 +54,7 @@ export default function Example() {
   
             // Add the download URL to the 'users' collection in Firestore
             const userDocRef = await addDoc(collection(db, `users/${user.uid}`), {
-              photoURL: downloadURL,
+              profileURL: downloadURL,
             });
   
             console.log('Document added with ID: ', userDocRef.id);
@@ -79,6 +79,7 @@ export default function Example() {
           const userData = docSnapshot.data();
           setName(userData?.displayName || "");
           setNumber(userData?.phoneNumber || "");
+          setPhotoURL(userData?.downloadURL ||"")
         })
         .catch((error) => {
           console.error("Error fetching user data:", error);
@@ -131,7 +132,8 @@ export default function Example() {
   //onsubmit if the user selected an input set all values to what the user selected
   // else if the user didnt select an input set it to a generic name or photo, make the number and name required
 
-  console.log(fileURLToPath)
+  console.log(authInstance.currentUser)
+
   return (
     <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
       <div

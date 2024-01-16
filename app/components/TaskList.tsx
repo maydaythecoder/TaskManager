@@ -22,7 +22,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/20/solid";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { ref, getMetadata, getDownloadURL } from "firebase/storage"; // Add storage imports
+import { ref, getDownloadURL } from "firebase/storage"; // Add storage imports
 
 const color = [
   {
@@ -74,8 +74,10 @@ interface Task {
 
 export default function TaskSection() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [uploadedFileURL, setUploadedFileURL] = useState<string>('');
+  const [profileURL, setprofileURL] = useState<string>('');
   const [user] = useAuthState(authInstance);
+  const profilePic = authInstance.currentUser?.profileURL
+  
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -157,28 +159,33 @@ export default function TaskSection() {
   };
   useEffect(() => {
     // Assuming 'uploadedFile' is updated when a file is uploaded
-    // Fetch file details from Firebase Storage and update 'uploadedFileURL'
-    if (uploadedFile) {
-      const uploadedFileRef = ref(storageInstance, `cover-photos/${user?.uid}/${uploadedFile.name}`);
-
+    // Fetch file details from Firebase Storage and update 'profileURL'
+    if (uploadedFile && user?.uid) {
+      const uploadedFileRef = ref(storageInstance, `cover-photos/${user.uid}/${uploadedFile.name}`);
+    
       getDownloadURL(uploadedFileRef)
-        .then((url: React.SetStateAction<string>) => setUploadedFileURL(url))
+        .then((downloadURL: string) => setprofileURL(downloadURL))
         .catch((error: any) => console.error("Error fetching file URL:", error));
     }
   }, [uploadedFile, user]);
+
+  console.log(user)
 
   return (
     <div>
       {/* form to add Tasks */}
       <div className="Tasks-start space-x-4 my-10 lg:col-start-2 lg:row-end-1 w-full mx-10 mt-10 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 ">
-        <div className="min-w-fit flex-1">
+      <span className="absolute">
           <img
             className="h-8 w-8 rounded-full bg-gray-50"
-            src={user?.photoURL || uploadedFileURL}
+            src={user?.photoURL || profilePic}
+
             alt="Profile picture"
           />
-          <form action="#" className="relative">
-            <div className=" overflow-x-hidden overflow-y-visible rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600">
+          </span>
+        <div className="min-w-fit flex-1">
+          <form action="#" className="relative ml-10">
+            <div className=" overflow-x-hidden overflow-y-visible rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600 ">
               {/* Task title input field */}
               <input
                 type="text"

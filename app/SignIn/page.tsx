@@ -53,7 +53,7 @@ export default function SignIn() {
       const uid = user.uid;
 
       // Creating a dictionary with user properties
-      const userDetails = {
+      const userData = {
         uid: user.uid,
         displayName: user.displayName || '',
         photoURL: user.photoURL || '',
@@ -76,7 +76,7 @@ export default function SignIn() {
       };
 
       // Add user data to Firestore
-      await addUser(uid, userDetails);
+      await addUser(uid, userData);
 
       // Navigate to TaskList upon successful Google login
       router.push("/TaskList");
@@ -111,17 +111,12 @@ export default function SignIn() {
       var user = userCredential.user;
       const uid = user.uid;
 
-      // Define user data to be stored in Firestore
-      const userData: Partial<UserData> = {
-        email: user.email || '',
-        // Add more properties as needed
-      };
-
       // Creating a dictionary with user properties
-      const userDetails = {
+      const userData = {
         uid: user.uid,
         displayName: user.displayName || '',
         photoURL: user.photoURL || '',
+        profileURL: user.profileURL || '',
         email: user.email || '',
         emailVerified: user.emailVerified,
         phoneNumber: user.phoneNumber || '',
@@ -137,12 +132,13 @@ export default function SignIn() {
           email: provider.email || '',
           phoneNumber: provider.phoneNumber || '',
           photoURL: provider.photoURL || '',
+          
         })),
       };
 
 
       // Add user data to Firestore
-      await addUser(uid, userDetails);
+      await addUser(uid, userData);
 
       // Navigate to TaskList upon successful signup
       router.push("/UserInfo");
