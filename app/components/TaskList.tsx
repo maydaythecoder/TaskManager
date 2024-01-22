@@ -57,13 +57,10 @@ const color = [
     bgColor: "bg-transparent",
   },
 ];
-
 const Tasks: Task[] = [];
-
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
-
 interface Task {
   id: number;
   title: string;
@@ -71,13 +68,11 @@ interface Task {
   description: string;
   color?: string; // Make color optional
 }
-
 export default function TaskSection() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [profileURL, setprofileURL] = useState<string>('');
+  const [profileURL, setprofileURL] = useState<string>("");
   const [user] = useAuthState(authInstance);
-  const profilePic = authInstance.currentUser?.profileURL
-  
+  const profilePic = authInstance.currentUser?.photoURL;
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -86,18 +81,15 @@ export default function TaskSection() {
   });
   const [selected, setSelected] = useState(color[4]);
   const [TasksList, setTasksList] = useState<Task[]>(Tasks);
-
   const getCurrentTime = () => {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, "0");
     const minutes = now.getMinutes().toString().padStart(2, "0");
     return `${hours}:${minutes}`;
   };
-
   useEffect(() => {
     setNewTask((prev) => ({ ...prev, level: getCurrentTime() }));
   }, []);
-
   const addTask = async (e: { target: any; preventDefault: () => void }) => {
     e.preventDefault();
     if (
@@ -125,7 +117,6 @@ export default function TaskSection() {
       e.target.form.reset(); // Reset the entire form
     }
   };
-
   useEffect(() => {
     const q = query(collection(db, "Tasks"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -137,12 +128,10 @@ export default function TaskSection() {
     });
     return () => unsubscribe();
   }, []);
-
   //delete items from database
   const deleteTask = async (id: number) => {
     await deleteDoc(doc(db, "Tasks", id.toString())); // Convert id to string if needed
   };
-
   const getColorClasses = (color: string) => {
     switch (color) {
       case "red":
@@ -157,32 +146,69 @@ export default function TaskSection() {
         return "";
     }
   };
+
+  // useEffect(() => {
+  //   // Assuming 'uploadedFile' is updated when a file is uploaded
+  //   // Fetch file details from Firebase Storage and update 'profileURL'
+  //   if (uploadedFile && user?.uid) {
+  //     const uploadedFileRef = ref(storageInstance, `cover-photos/${user.uid}/${uploadedFile.name}`);
+
+  //     getDownloadURL(uploadedFileRef)
+  //       .then((downloadURL: string) => setprofileURL(profilePic))
+  //       .catch((error: any) => console.error("Error fetching file URL:", error));
+  //   }
+  // }, [uploadedFile, user]);
+
+
+
+
+
+
+
+
+
+
+  
   useEffect(() => {
-    // Assuming 'uploadedFile' is updated when a file is uploaded
-    // Fetch file details from Firebase Storage and update 'profileURL'
     if (uploadedFile && user?.uid) {
-      const uploadedFileRef = ref(storageInstance, `cover-photos/${user.uid}/${uploadedFile.name}`);
-    
+      const filename = `profilePic.${uploadedFile.name.split(".").pop()}`; // Construct the specific filename
+      const uploadedFileRef = ref(
+        storageInstance,
+        `cover-photos/${user.uid}/${filename}`
+      ); // Use the constructed filename
+
       getDownloadURL(uploadedFileRef)
-        .then((downloadURL: string) => setprofileURL(downloadURL))
-        .catch((error: any) => console.error("Error fetching file URL:", error));
+        .then((downloadURL: string) => {
+          if (downloadURL) {
+            setprofileURL(downloadURL); // Use downloadURL from Firebase Storage
+          } else if (profilePic) {
+            setprofileURL(profilePic as string); // Fallback to profilePic if downloadURL is undefined
+          }
+        })
+        .catch((error: any) =>
+          console.error("Error fetching file URL:", error)
+        );
     }
   }, [uploadedFile, user]);
 
-  console.log(user)
+  // ...
+
+  console.log(user);
+  console.log(user?.photoURL);
 
   return (
     <div>
       {/* form to add Tasks */}
-      <div className="Tasks-start space-x-4 my-10 lg:col-start-2 lg:row-end-1 w-full mx-10 mt-10 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 ">
-      <span className="absolute">
+      <div className="Tasks-start space-x-4 my-10 lg:col-start-2 lg:row-end-1 w-full mx-10 mt-10 grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
+        <span className="absolute">
           <img
-            className="h-8 w-8 rounded-full bg-gray-50"
-            src={user?.photoURL || profilePic}
-
-            alt="Profile picture"
+            className="rounded-full bg-gray-50"
+            src={user?.photoURL || profileURL}
+            width={50}
+            height={50}
+            alt="Picture of the author"
           />
-          </span>
+        </span>
         <div className="min-w-fit flex-1">
           <form action="#" className="relative ml-10">
             <div className=" overflow-x-hidden overflow-y-visible rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600 ">

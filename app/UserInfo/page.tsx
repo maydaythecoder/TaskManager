@@ -3,13 +3,10 @@ import { FormEvent, useEffect, useState } from "react";
 import { Switch } from "@headlessui/react";
 import { authInstance, storageInstance } from "../components/firebase";
 import { db } from "../components/firebase";
-import { doc, collection, getDoc, setDoc, addDoc, updateDoc } from "firebase/firestore";
+import { doc, collection, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { PhotoIcon } from "@heroicons/react/20/solid";
-import { fileURLToPath } from "url";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import firebase from "firebase/compat/app";
-import { getDatabase, ref as databaseRef, update } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 
 
@@ -24,7 +21,6 @@ export default function Example() {
   const [photoURL, setPhotoURL] = useState<string | null>(null); // Added state for photoURL
   const router = useRouter();
 
-
   const handleFileChange = async (event: { target: { files: any; }; }) => {
     const files = event.target.files;
   
@@ -33,41 +29,39 @@ export default function Example() {
   
       if (user) {
         const uploadedFile = files[0];
-        const storageRef = ref(storageInstance, `cover-photos/${user.uid}/${uploadedFile.name}`);
+        const extension = uploadedFile.name.split('.').pop(); // Extract the file extension
+  
+        // Construct the filename with "profilePic.png" or the extracted extension
+        const filename = `profilePic.${extension}`;
+  
+        const storageRef = ref(storageInstance, `cover-photos/${user.uid}/${filename}`); // Use the new filename
   
         try {
-          const uploadTask = uploadBytes(storageRef, uploadedFile);
+          const uploadPhoto = uploadBytes(storageRef, uploadedFile);
   
-          uploadTask.then(async () => {
+          await uploadPhoto.then(async () => {
             // Get the download URL
             const downloadURL = await getDownloadURL(storageRef);
-  
-            // Save the URL to the user's profile in the database
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, { profileURL: downloadURL });
-  
-            console.log('File uploaded:', uploadedFile);
-            console.log('File name:', uploadedFile.name);
-            console.log('File size:', uploadedFile.size, 'bytes');
-            console.log('File type:', uploadedFile.type);
-            console.log('Download URL:', downloadURL);
-  
-            // Add the download URL to the 'users' collection in Firestore
-            const userDocRef = await addDoc(collection(db, `users/${user.uid}`), {
-              profileURL: downloadURL,
-            });
-  
-            console.log('Document added with ID: ', userDocRef.id);
+        
+            // Fetch the user document to update
+            const userDocRef = doc(db, 'users', user.uid);
+        
+            // Update the photoURL field with the downloadURL
+            await updateDoc(userDocRef, { photoURL: downloadURL });
+        
+            console.log("Photo URL successfully updated in Firestore!");
           });
-  
+        
         } catch (error) {
           console.error('Error uploading file:', error);
         }
+        
       } else {
         console.error('User is null. Please make sure the user is authenticated.');
       }
     }
   };
+  
   
   
 
@@ -132,7 +126,7 @@ export default function Example() {
   //onsubmit if the user selected an input set all values to what the user selected
   // else if the user didnt select an input set it to a generic name or photo, make the number and name required
 
-  console.log(authInstance.currentUser)
+  console.log(authInstance.currentUser?.photoURL)
 
   return (
     <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
