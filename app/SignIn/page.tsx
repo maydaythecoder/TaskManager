@@ -116,7 +116,6 @@ export default function SignIn() {
         uid: user.uid,
         displayName: user.displayName || '',
         photoURL: user.photoURL || '',
-        profileURL: user.profileURL || '',
         email: user.email || '',
         emailVerified: user.emailVerified,
         phoneNumber: user.phoneNumber || '',

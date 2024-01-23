@@ -168,10 +168,13 @@ export default function TaskSection() {
 
 
 
-  
+
   useEffect(() => {
     if (uploadedFile && user?.uid) {
-      const filename = `profilePic.${uploadedFile.name.split(".").pop()}`; // Construct the specific filename
+        const extension = uploadedFile.name.split('.').pop(); // Extract the file extension
+  
+        // Construct the filename with "profilePic.png" or the extracted extension
+        const filename = `profilePic.${extension}`; // Construct the specific filename
       const uploadedFileRef = ref(
         storageInstance,
         `cover-photos/${user.uid}/${filename}`
