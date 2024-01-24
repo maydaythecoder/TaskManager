@@ -26,7 +26,7 @@ export default function SignIn() {
       const existingUser = await getDoc(userRef);
       if (existingUser.exists()) {
         console.log("User with the same email already exists");
-        router.push("/TaskList");
+        router.push("/TaskManager");
         return;
       }
 
@@ -34,8 +34,8 @@ export default function SignIn() {
       await setDoc(userRef, data, { merge: true });
       console.log("User document successfully created/updated");
 
-      // Navigate to TaskList upon successful user creation
-      router.push("/TaskList");
+      // Navigate to TaskManager upon successful user creation
+      router.push("/TaskManager");
     } catch (error: any) {
       console.error("Error adding user document:", error.message);
       throw new Error("Failed to add user document to Firestore");
@@ -78,8 +78,8 @@ export default function SignIn() {
       // Add user data to Firestore
       await addUser(uid, userData);
 
-      // Navigate to TaskList upon successful Google login
-      router.push("/TaskList");
+      // Navigate to TaskManager upon successful Google login
+      router.push("/TaskManager");
     } catch (error) {
       console.error(error);
     }
@@ -92,9 +92,9 @@ export default function SignIn() {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
 
-      // Assuming a successful login, you can navigate to the TaskList component
+      // Assuming a successful login, you can navigate to the TaskManager component
       if (result) {
-        router.push("/TaskList");
+        router.push("/TaskManager");
       }
     } catch (error) {
       console.error(error);
@@ -139,7 +139,7 @@ export default function SignIn() {
       // Add user data to Firestore
       await addUser(uid, userData);
 
-      // Navigate to TaskList upon successful signup
+      // Navigate to TaskManager upon successful signup
       router.push("/UserInfo");
     } catch (error: any) {
       const errorCode = error.code;

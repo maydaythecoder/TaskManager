@@ -1,30 +1,37 @@
-import React from "react";
-import { authInstance } from "./firebase";
+import React, { useEffect, useState } from "react";
+import { authInstance, db } from "./firebase";
+import { collection, doc, getDoc } from "firebase/firestore";
 // import React, { useEffect, useState } from "react";
 // import { authInstance, storageInstance } from "./firebase";
 // import { ref, getDownloadURL } from "firebase/storage";
 
 export default function ProfilePicture() {
+    const [profilePic, setprofilePic] = useState();
 
 
-    console.log(authInstance.currentUser?.photoURL)
-    // select the photoURL feild from the document whos name matches the users uid
-    /*---------------------------------------------------------------------------------------*/
+    useEffect(() => {
+        const currentUser = authInstance.currentUser;
+        if (currentUser) {
+          getDoc(doc(collection(db, "users"), currentUser.uid))
+            .then((docSnapshot) => {
+              const userData = docSnapshot.data();
+              setprofilePic(userData?.photoURL);
 
-    // store it in a variable 
-    /*---------------------------------------------------------------------------------------*/
-    // const profilePic = authInstance.currentUser?.photoURL
-    // const profilePic (referance the location int the db)
+            })
+            .catch((error) => {
+              console.error("Error fetching user data:", error);
+            });
+        }
+      }, [authInstance.currentUser]);
+  
 
-    // render that variable
-    /*---------------------------------------------------------------------------------------*/
-    // src={profilePic}
-
-    return (
+ console.log(profilePic)
+console.log(authInstance.currentUser?.photoURL)
+ return (
     <div className="absolute w-52 h-52">
       <img
         className="rounded-full bg-gray-50 overflow-hidden w-16 h-16"
-        src="https://firebasestorage.googleapis.com/v0/b/task-manager-c7b75.appspot.com/o/cover-photos%2F2bSgVN19mYaI4ry7Vd47sWYo6L52%2FprofilePic.jpg?alt=media&token=91866149-b0bf-403a-b1c6-f2869af7c32f"
+        src={profilePic}
         alt="Picture of the author"
         style={{ objectFit: "cover" }}
       />
