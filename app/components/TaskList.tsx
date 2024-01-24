@@ -51,6 +51,7 @@ const color = [
     bgColor: "bg-transparent",
   },
 ];
+
 const Tasks: Task[] = [];
 
 export default function TaskList() {

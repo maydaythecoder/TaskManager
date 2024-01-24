@@ -1,29 +1,67 @@
 import React, { useEffect, useState } from "react";
-import { authInstance, db } from "./firebase";
+import { authInstance, db, storageInstance } from "./firebase";
 import { collection, doc, getDoc } from "firebase/firestore";
-// import React, { useEffect, useState } from "react";
-// import { authInstance, storageInstance } from "./firebase";
-// import { ref, getDownloadURL } from "firebase/storage";
+import { getDownloadURL, ref } from "firebase/storage";
+
 
 export default function ProfilePicture() {
-    const [profilePic, setprofilePic] = useState();
+    const [profilePic, setprofilePic] = useState<string | undefined>("");
+
 
 
     useEffect(() => {
+        // Check who's logged in
         const currentUser = authInstance.currentUser;
+      
         if (currentUser) {
-          getDoc(doc(collection(db, "users"), currentUser.uid))
-            .then((docSnapshot) => {
-              const userData = docSnapshot.data();
+            const fetchFromStorage = async () => {
+                const allowedExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+                let downloadURL;
+        
+                for (const extension of allowedExtensions) {
+                  const storageRef = ref(
+                    storageInstance,
+                    `cover-photos/${currentUser.uid}/profilePic${extension}`
+                  );
+                  try {
+                    downloadURL = await getDownloadURL(storageRef);
+                    break; // Exit the loop if a valid downloadURL is found
+                  } catch (error: any) {
+                    if (error.code !== "storage/object-not-found") {
+                      // Handle other errors
+                      console.error("Error fetching download URL:", error);
+                    }
+                  }
+                }
+        
+                if (downloadURL) {
+                  setprofilePic(downloadURL);
+                } else {
+                  console.log("Profile picture not found in Storage with any of the allowed extensions.");
+                  // Handle the case where the file is not found
+                }
+              };
+              
+      
+          const fetchFromFirestore = async () => {
+            const docRef = doc(collection(db, "users"), currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              const userData = docSnap.data();
               setprofilePic(userData?.photoURL);
-
-            })
-            .catch((error) => {
-              console.error("Error fetching user data:", error);
-            });
+            }
+          };
+      
+          // Choose the preferred method
+          const method = "storage"; // or "firestore"
+      
+          if (method === "storage") {
+            fetchFromStorage();
+          } else {
+            fetchFromFirestore();
+          }
         }
-      }, [authInstance.currentUser]);
-  
+      }, [authInstance.currentUser]); 
 
  console.log(profilePic)
 console.log(authInstance.currentUser?.photoURL)
