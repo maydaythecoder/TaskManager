@@ -12,7 +12,7 @@ export interface UserData {
     // describes the data that a user is expected expected to contain
     uid: string;
     bio?: string;
-    email: string;
+    email: string | object;
     profilePhoto: string;
     username: string;
     website?: string;

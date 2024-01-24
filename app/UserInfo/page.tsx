@@ -18,7 +18,7 @@ export default function Example() {
   const [agreed, setAgreed] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
   const [number, setNumber] = useState<string>("");
-  const [photoURL, setPhotoURL] = useState<string | null>(null); // Added state for photoURL
+  const [photoURL, setPhotoURL] = useState<string>(""); // Added state for photoURL
   const router = useRouter();
 
   const handleFileChange = async (event: { target: { files: any; }; }) => {
@@ -88,6 +88,8 @@ export default function Example() {
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNumber(e.target.value);
   };
+
+
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
