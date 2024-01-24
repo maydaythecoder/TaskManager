@@ -34,7 +34,7 @@ const SignUp = () => {
     e.preventDefault();
   
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password, name);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       var user = userCredential.user;
       const uid = user.uid;
   
