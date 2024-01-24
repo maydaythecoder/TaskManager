@@ -76,3 +76,5 @@ console.log(authInstance.currentUser?.photoURL)
     </div>
   );
 }
+
+// make it refetch the downloadurl on reload
