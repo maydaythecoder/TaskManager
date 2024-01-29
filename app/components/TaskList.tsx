@@ -86,7 +86,7 @@ export default function TaskList() {
     }
   };
   return (
-<div className="grid grid-cols-5 md:grid-cols-3 gap-6  mt-64 h-full">
+<div className="grid grid-cols-5 md:grid-cols-3 gap-6 mx-28 mt-64 h-full">
   {TasksList.map((Task) => (
     <div
       key={Task.id}
