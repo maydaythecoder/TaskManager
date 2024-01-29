@@ -1,6 +1,6 @@
 "use client";
 
-import { db } from "./firebase"; // Add storage import
+import { authInstance, db } from "./firebase"; // Add storage import
 import { Listbox, Transition } from "@headlessui/react";
 import React, { Fragment, useState, useEffect } from "react";
 import {
@@ -9,7 +9,6 @@ import {
   getDocs,
   query,
   onSnapshot,
-  deleteDoc,
   doc,
 } from "firebase/firestore";
 import {
@@ -64,6 +63,7 @@ function classNames(...classes: string[]) {
 
 
 export default function TaskForm() {
+  const uid = authInstance.currentUser?.uid
 
   const [newTask, setNewTask] = useState({
     title: "",
@@ -82,33 +82,50 @@ export default function TaskForm() {
   useEffect(() => {
     setNewTask((prev) => ({ ...prev, level: getCurrentTime() }));
   }, []);
+ 
+
   const addTask = async (e: { target: any; preventDefault: () => void }) => {
     e.preventDefault();
+    
     if (
       newTask.title !== "" &&
       newTask.description !== "" &&
       newTask.color !== "" &&
       newTask.level !== ""
     ) {
-      await addDoc(collection(db, "Tasks"), {
-        title: newTask.title.trim(),
-        description: newTask.description,
-        color: newTask.color,
-        level: newTask.level,
-      });
-
-      setNewTask({ title: "", description: "", color: "", level: "" });
-      setSelected(color[4]);
-
-      const TasksSnapshot = await getDocs(collection(db, "Tasks"));
-      const updatedTasksList = TasksSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as unknown as Task[];
-      setTasksList(updatedTasksList);
-      e.target.form.reset(); // Reset the entire form
+      if (!uid) {
+        console.error("User UID is undefined");
+        return;
+      }
+  
+      const userRef = doc(db, "users", uid); // Assuming `uid` is the UID of the user
+      const tasksCollectionRef = collection(userRef, "tasks");
+    
+      try {
+        await addDoc(tasksCollectionRef, {
+          title: newTask.title.trim(),
+          description: newTask.description,
+          color: newTask.color,
+          level: newTask.level,
+        });
+    
+        setNewTask({ title: "", description: "", color: "", level: "" });
+        setSelected(color[4]);
+    
+        const tasksSnapshot = await getDocs(tasksCollectionRef);
+        const updatedTasksList = tasksSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as unknown as Task[];
+        setTasksList(updatedTasksList);
+        e.target.form.reset(); // Reset the entire form
+      } catch (error) {
+        console.error("Error adding task:", error);
+      }
     }
   };
+  
+  
   useEffect(() => {
     const q = query(collection(db, "Tasks"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
