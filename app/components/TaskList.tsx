@@ -86,44 +86,35 @@ export default function TaskList() {
     }
   };
   return (
-    <div className="lg:col-start-3 lg:row-end-1 w-fit mx-10 mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-96">
-      {TasksList.map((Task) => (
-        <div
-          key={Task.id}
-          className={`rounded-lg bg-gray-50 shadow-sm ${
-            Task.color && getColorClasses(Task.color)
-          }`}
+<div className="grid grid-cols-5 md:grid-cols-3 gap-6  mt-64 h-full">
+  {TasksList.map((Task) => (
+    <div
+      key={Task.id}
+      className={`rounded-lg bg-gray-50 h-52 shadow-sm ${
+        Task.color && getColorClasses(Task.color)
+      }`}
+    >
+      <dl className="items-center justify-between w-96">
+        <dt className="w-fit pl-6 pt-6 text-base font-semibold leading-6 text-gray-900">
+          {Task.title}
+        </dt>
+        <dd className="px-6 pt-4 text-xs font-medium">
+          {Task.level}
+        </dd>
+      </dl>
+      <div className="mt-6 border-t border-gray-900/5 px-6 py-4">
+        <p className="text-gray-600">{Task.description}</p>
+        <button
+          onClick={() => deleteTask(Task.id)}
+          type="submit"
+          className="rounded-md bg-red-600 px-3 py-2 text-sm text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ml-80"
         >
-          <dl className="flex flex-wrap">
-            <div className="flex-auto pl-6 pt-6">
-              <dd className="mt-1 text-base font-semibold leading-6 text-gray-900">
-                {Task.title}
-              </dd>
-            </div>
-            <div className="flex-none self-end px-6 pt-4">
-              <dd
-                className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                  Task.color && getColorClasses(Task.color)
-                }`}
-              >
-                {Task.level}
-              </dd>
-            </div>
-          </dl>
-          <div className="mt-6 border-t border-gray-900/5 px-6 pb-6">
-            <h2 className="text-gray-600">{Task.description}</h2>
-            <div className="flex-none self-end px-6 pt-4">
-              <button
-                onClick={() => deleteTask(Task.id)}
-                type="submit"
-                className="inline-flex items-center rounded-md font-medium bg-red-600 px-3 py-2 text-sm text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 absolute ml-80 mb-5 -mt-5"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
+          Delete
+        </button>
+      </div>
     </div>
+  ))}
+</div>
+
   );
 }

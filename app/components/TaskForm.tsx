@@ -63,7 +63,7 @@ function classNames(...classes: string[]) {
 }
 
 
-const TaskForm = () => {
+export default function TaskForm() {
 
   const [newTask, setNewTask] = useState({
     title: "",
@@ -122,9 +122,10 @@ const TaskForm = () => {
   }, []);
 
   return (
+    <div className="absolute">
     <div className="min-w-fit flex-1 pl-10">
-      <form action="#" className="relative ml-10">
-        <div className=" overflow-x-hidden overflow-y-visible rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600 ">
+      <form action="#" className="relative ml-10" autoComplete="off">
+        <div className=" overflow-x-hidden overflow-y-visible rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-blue-600">
           {/* Task title input field */}
           <input
             type="text"
@@ -278,7 +279,8 @@ const TaskForm = () => {
         </div>
       </form>
     </div>
+    </div>
   );
 };
 
-export default TaskForm;
+
