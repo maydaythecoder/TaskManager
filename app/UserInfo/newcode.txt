@@ -1,2 +1,0 @@
-set the profilephoto to the photoURL value in the users db from the document matching the uid
-or the dowmloadurl from the coverphotos folder in the storage instance under thesubdirectory matching the uid
